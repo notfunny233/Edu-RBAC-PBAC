@@ -14,9 +14,8 @@ export const useUserStore = defineStore('user', () => {
 
   // 登录成功后调用，把后端返回的信息存下来
   function setLoginInfo(data) {
-    // 后端返回的 data 是：{ id, username, password, token }
-    // password 是后端的字段设计问题（明文密码不该回传），
-    // 前端只取要用的两个字段，密码不存、不显示。
+    // 后端返回的 data 是：{ id, username, token }
+    // 只取 id 和 username 展示用，token 单独存一份给请求拦截器。
     token.value = data.token
     userInfo.value = { id: data.id, username: data.username }
 

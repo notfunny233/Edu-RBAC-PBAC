@@ -85,16 +85,6 @@ public class TokenInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    /**
-     * 请求处理完成后清理线程上的登录人
-     * <p>
-     * 这一句不能省：Tomcat 用线程池，线程处理完请求会还回去继续服务下一个请求，
-     * 不清就会串数据 —— 下一个请求在这条线程上先读到上一个人的登录信息，
-     * 表现是"偶尔能看到别人的数据"，属于最难复现的那类越权问题。
-     * <p>
-     * 补充：preHandle 返回 false 时 Spring 不会回调本方法，
-     * 但那种情况下也没往上下文里放过东西，所以不会漏。
-     */
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         LoginContextHolder.clear();

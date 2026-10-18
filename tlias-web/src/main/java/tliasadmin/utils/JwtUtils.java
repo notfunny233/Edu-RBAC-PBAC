@@ -15,29 +15,20 @@ public class JwtUtils {
             "aXRoZWl0YQ==aXRoZWl0YQ==aXRoZWl0YQ==".getBytes()
     );
 
-    // 过期时间：12小时（毫秒）
-    private static final long EXPIRATION = 12 * 3600 * 1000L;
+    // 过期时间：2小时（毫秒）。压短是为了缩小令牌泄露后的可用窗口
+    private static final long EXPIRATION = 2 * 3600 * 1000L;
 
-    /**
-     * 生成JWT令牌
-     *
-     * @param dataMap 自定义数据（如 id、username 等）
-     * @return JWT令牌字符串
-     */
+
+    //生成JWT令牌
     public static String generateToken(Map<String, Object> dataMap) {
         return Jwts.builder()
                 .claims(dataMap)                                        // 添加自定义数据
-                .expiration(new Date(System.currentTimeMillis() + EXPIRATION)) // 设置过期时间为12小时System.currentTimeMillis () 为获取系统现在的时间
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION)) // 过期时间 = 当前时间 + EXPIRATION
                 .signWith(KEY, Jwts.SIG.HS256)                         // 使用HS256算法和密钥签名
                 .compact();                                             // 生成令牌
     }
 
-    /**
-     * 解析JWT令牌
-     *
-     * @param token JWT令牌字符串
-     * @return Claims对象，包含令牌中的自定义数据
-     */
+    // 解析JWT令牌
     public static Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(KEY)              // 设置验证密钥

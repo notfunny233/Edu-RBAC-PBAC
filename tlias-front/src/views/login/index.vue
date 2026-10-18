@@ -46,7 +46,7 @@ const handleLogin = async () => {
     const res = await login({ ...form })
 
     // 拦截器已经确认过 code === 1 才会走到这里，
-    // 所以 res.data 就是登录信息：{ id, username, password, token }
+    // 所以 res.data 就是登录信息：{ id, username, token }
     userStore.setLoginInfo(res.data)
 
     ElMessage.success('登录成功')

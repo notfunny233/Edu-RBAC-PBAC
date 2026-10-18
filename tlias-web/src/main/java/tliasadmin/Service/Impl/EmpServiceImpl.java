@@ -142,7 +142,7 @@ public class EmpServiceImpl implements EmpService {
             claim.put("id", e.getId());
             claim.put("username", e.getUsername());
             String token = JwtUtils.generateToken(claim);
-            return new Logininfo(e.getId(), e.getUsername(), e.getPassword(), token);
+            return new Logininfo(e.getId(), e.getUsername(), token);
         }
         return null;
     }
