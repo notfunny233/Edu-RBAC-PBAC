@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="eduadmin.Mapper.RolePermissionMapper">
+
+    <!--批量插入角色权限关联-->
+    <insert id="insertBatch">
+        insert into role_permission(role_id, permission_id) values
+        <foreach collection="permissionIds" item="permissionId" separator=",">
+            (#{roleId}, #{permissionId})
+        </foreach>
+    </insert>
+
+    <!--决策引擎专用：角色ID集合 -> 权限点编码集合-->
+    <!--用 inner join 而不是先查关联再查权限点，一次往返拿到结果，
+        这是每个请求都会走的路径，少一次往返就是实打实的响应时间-->
+    <!--⚠️ 调用方必须保证 roleIds 非空，空集合会拼出 in () 这种语法错误的 SQL-->
+    <select id="selectCodesByRoleIds" resultType="java.lang.String">
+        select distinct p.code
+        from permission p
+        inner join role_permission rp on p.id = rp.permission_id
+        where rp.role_id in
+        <foreach collection="roleIds" separator="," item="roleId" open="(" close=")">
+            #{roleId}
+        </foreach>
+    </select>
+
+    <!--按角色ID批量删除关联-->
+    <!--角色被删除时调用，与 EmpRoleMapper.deleteByRoleIds 成对出现：
+        一个角色从两张关联表里都要清掉，只清一边会留下悬空引用-->
+    <delete id="deleteByRoleIds">
+        delete from role_permission
+        where role_id in
+        <foreach collection="roleIds" separator="," item="roleId" open="(" close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+
+    <!--按权限点ID批量删除关联-->
+    <!--权限点被删除时调用。权限点删了但 role_permission 里还留着它的ID，
+        表现为"角色授权界面勾选数对不上"，属于查起来很费劲的脏数据-->
+    <delete id="deleteByPermissionIds">
+        delete from role_permission
+        where permission_id in
+        <foreach collection="permissionIds" separator="," item="permissionId" open="(" close=")">
+            #{permissionId}
+        </foreach>
+    </delete>
+
+</mapper>

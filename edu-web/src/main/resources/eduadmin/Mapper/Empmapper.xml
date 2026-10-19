@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="eduadmin.Mapper.EmpMapper">
+
+    <!--根据ID更新员工基本信息-->
+    <!--set标签：会自动生成set关键字；会自动的删除掉更新字段后多余的,-->
+    <update id="empupdate">
+        update emp
+        <set>
+        <if test="username != null and username != ''">username=#{username},</if>
+        <if test="password != null and password != ''">password = #{password},</if>
+        <if test="name != null and name != ''">name = #{name},</if>
+        <if test="gender != null">gender = #{gender},</if>
+        <if test="phone != null and phone != ''">phone = #{phone},</if>
+        <if test="job != null">job = #{job},</if>
+        <if test="salary != null">salary = #{salary},</if>
+        <if test="image != null and image != ''">image = #{image},</if>
+        <if test="entryDate != null">entry_date = #{entryDate},</if>
+        <if test="deptId != null">dept_id = #{deptId},</if>
+        <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--条件查询-->
+    <select id="list" resultType="eduadmin.pojo.Emp">
+        SELECT e.*, d.name AS deptName
+        FROM emp e
+        LEFT JOIN dept d ON e.dept_id = d.id
+        <where>
+            <if test="name != null and name != ''">
+                e.name like concat('%',#{name},'%')
+            </if>
+            <if test="gender != null">
+                and e.gender = #{gender}
+            </if>
+            <if test="begin != null and end != null">
+                and e.entry_date between #{begin} and #{end}
+            </if>
+        </where>
+        order by e.update_time desc
+    </select>
+
+    <!--自定义结果集ResultMap-->
+    <resultMap id="empResultMap" type="eduadmin.pojo.Emp">
+        <id column="id" property="id" /><!--id标签-->
+        <result column="username" property="username" /><!--普通属性标签-->
+        <result column="password" property="password" />
+        <result column="name" property="name" />
+        <result column="gender" property="gender" />
+        <result column="image" property="image" />
+        <result column="entry_date" property="entryDate" />
+        <result column="dept_id" property="deptId" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="phone" property="phone"/>
+        <result column="job" property="job"/>
+        <result column="salary" property="salary"/>
+        <!--封装exprList property属性(集合)名   ofType集合泛型-->
+        <collection property="exprList" ofType="eduadmin.pojo.EmpExpr"><!--集合标签-->
+            <id column="ee_id" property="id"/>
+            <result column="ee_company" property="company"/>
+            <result column="ee_job" property="job"/>
+            <result column="ee_begin" property="begin"/>
+            <result column="ee_end" property="end"/>
+            <result column="ee_empid" property="empId"/>
+        </collection>
+    </resultMap>
+
+    <!--查询回显采用自定义封装结果集 因为工作经历是集合-->
+    <select id="getempById" resultMap="empResultMap">
+        select
+            e.* ,
+            ee.id ee_id,
+            ee.emp_id ee_empid,
+            ee.begin ee_begin,
+            ee.end ee_end,
+            ee.company ee_company,
+            ee.job ee_job
+        from emp e
+        left join emp_expr ee
+        on e.id = ee.emp_id
+        where e.id = #{id};
+    </select>
+
+    <!--分组查询识别对应的名称-->
+    <!--分组查询统计每个工作的人数-->
+    <select id="getJobDataList" resultType="java.util.Map">
+        select
+            (case job
+                when 1 then '班主任'
+                when 2 then '讲师'
+                when 3 then '学工主管'
+                when 4 then '教研主管'
+                when 5 then '咨询师'
+                else '其他'
+                end) pos,  <!--end结束case，逗号分隔下一个字段-->
+        count(*) num from emp group by job order by num;
+    </select>
+
+    <!--分组查询统计每个性别的人数-->
+    <select id="getGenderData" resultType="eduadmin.pojo.EmpGender">
+        select
+            (case gender
+                when 1 then '男性员工'
+                when 2 then '女性员工'
+                else '其他'
+                end) name,
+        count(*) value from emp group by gender order by value;
+    </select>
+
+    <!--#批量删除员工-->
+    <delete id="del">
+        delete from emp
+        where id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+
+    </delete>
+
+</mapper>
